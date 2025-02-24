@@ -92,8 +92,8 @@ class CustomController(Controller):
                     return ActionResult(extracted_content="No age verification pop-up found.")
 
             except Exception as e:
-                error_msg = f"Error handling age verification: {e}"
-                logger.warning(error_msg) # Changed to warning for MVP
+                error_msg = f"Error handling age verification: {type(e).__name__} - {e}" # Improved logging
+                logger.warning(error_msg)
                 return ActionResult(error=error_msg)
 
         @self.registry.action(
@@ -104,7 +104,7 @@ class CustomController(Controller):
             deal_keywords = ["Deals", "Discounts", "Savings", "Promotions", "Specials", "Offers", "Sales"]
             menu_selectors = ['#main-nav', '.nav-menu', '#top-menu', '.header-navigation', '#menu', '.site-header nav']
 
-            try: # Added try-except for MVP error handling
+            try:
                 for menu_selector in menu_selectors:
                     menu = await page.locator(menu_selector, timeout=5000).first()
                     if await menu.count() > 0:
@@ -130,9 +130,9 @@ class CustomController(Controller):
                 logger.info(error_msg)
                 return ActionResult(extracted_content=error_msg)
 
-            except Exception as e: # Basic error handling for MVP
-                error_msg = f"Error navigating to deals page: {e}"
-                logger.warning(error_msg) # Changed to warning for MVP
+            except Exception as e:
+                error_msg = f"Error navigating to deals page: {type(e).__name__} - {e}" # Improved logging
+                logger.warning(error_msg)
                 return ActionResult(error=error_msg)
 
 
@@ -159,7 +159,7 @@ class CustomController(Controller):
                         deal_items = await deals_container.locator('div', timeout=5000).all()
 
                     for item in deal_items:
-                        try: # Added try-except for MVP error handling
+                        try:
                             title_element_text = await item.locator('h2, h3, .deal-title, .discount-title, .offer-title').first().inner_text(timeout=3000)
                             description_element_text = await item.locator('p, .deal-description, .discount-description, .offer-description, .description').first().inner_text(timeout=3000)
                             price_element_text = await item.locator('.price, .deal-price, .discount-price, .offer-price, .current-price, .sale-price').first().inner_text(timeout=3000)
@@ -173,12 +173,11 @@ class CustomController(Controller):
                             }
                             extracted_deals.append(deal_data)
                         except Exception as extract_item_err:
-                            logger.warning(f"Error extracting deal item: {extract_item_err}") # Changed to warning for MVP
+                            logger.warning(f"Error extracting deal item: {type(extract_item_err).__name__} - {extract_item_err}") # Improved logging
 
                     if extracted_deals:
                         return ActionResult(extracted_content=f"Extracted Deals Content from {container_selector}: {extracted_deals}", structured_content=extracted_deals)
 
-            # Fallback extraction remains the same (for MVP, focus on structured extraction first)
             logger.info("No specific deals container found, extracting deals from page body (fallback).")
             body_content = await page.locator('body').inner_text(timeout=10000)
             fallback_deal_data = {"full_page_deals_text": body_content.strip() if body_content else "No Page Content"}
@@ -209,10 +208,10 @@ class CustomController(Controller):
                         for next_button_selector in next_button_selectors:
                             carousel_next_button = await carousel.locator(next_button_selector, timeout=3000).first()
                             if await carousel_next_button.count() > 0:
-                                try: # Added try-except for MVP error handling
+                                try:
                                     deal_items_carousel = await carousel.locator(','.join(deal_item_carousel_selectors), timeout=5000).all()
                                     for item in deal_items_carousel:
-                                        try: # Added try-except for MVP item extraction error handling
+                                        try:
                                             title_element_text = await item.locator('h2, h3, .deal-title, .discount-title, .offer-title').first().inner_text(timeout=3000)
                                             description_element_text = await item.locator('p, .deal-description, .discount-description, .offer-description, .description').first().inner_text(timeout=3000)
                                             price_element_text = await item.locator('.price, .deal-price, .discount-price, .offer-price, .current-price, .sale-price').first().inner_text(timeout=3000)
@@ -226,14 +225,14 @@ class CustomController(Controller):
                                             }
                                             extracted_carousel_deals.append(deal_data)
                                         except Exception as extract_carousel_item_err:
-                                            logger.warning(f"Error extracting carousel deal item: {extract_carousel_item_err}") # Changed to warning for MVP
+                                            logger.warning(f"Error extracting carousel deal item: {type(extract_carousel_item_err).__name__} - {extract_carousel_item_err}") # Improved logging
 
                                     await carousel_next_button.click(timeout=10000)
                                     next_button_clicked = True
                                     await asyncio.sleep(1)
                                     break
                                 except Exception as carousel_nav_err:
-                                    logger.warning(f"Carousel navigation issue or no more slides: {carousel_nav_err}") # Changed to warning for MVP
+                                    logger.warning(f"Carousel navigation issue or no more slides: {type(carousel_nav_err).__name__} - {carousel_nav_err}") # Improved logging
                                     break
                         if not next_button_clicked:
                             logger.info("No more next buttons found in carousel.")
